@@ -187,14 +187,6 @@
 
 ---
 
-**Tài liệu đạt mức sẵn sàng để:**
-
-* Trình duyệt Ban CNTT / Khối Tín dụng
-* Làm FSD / SRS
-* Thiết kế kiến trúc AI & eKYC
-
-
-<img width="9950" height="14105" alt="Quy trình Nộp hồ sơ Vay mua nhà" src="https://github.com/user-attachments/assets/583c70c3-3b49-45f8-8305-b8c2457588c0" />
 
 # PHẦN 4 – Sơ đồ Mermaid.
 ```mermaid
