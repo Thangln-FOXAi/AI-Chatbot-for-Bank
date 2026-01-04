@@ -197,6 +197,7 @@
 <img width="9950" height="14105" alt="Quy trình Nộp hồ sơ Vay mua nhà" src="https://github.com/user-attachments/assets/583c70c3-3b49-45f8-8305-b8c2457588c0" />
 
 # PHẦN 4 – Sơ đồ Mermaid.
+```mermaid
 sequenceDiagram
     autonumber
     participant U as Người dùng (Borrower)
@@ -282,3 +283,4 @@ sequenceDiagram
     BE->>EXT: Đẩy hồ sơ sang LOS (Loan Origination System)
     BE-->>FE: Thông báo Thành công
     FE-->>U: Hiển thị mã hồ sơ & Kết thúc
+```
