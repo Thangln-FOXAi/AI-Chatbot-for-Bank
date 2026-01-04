@@ -192,3 +192,93 @@
 * Trình duyệt Ban CNTT / Khối Tín dụng
 * Làm FSD / SRS
 * Thiết kế kiến trúc AI & eKYC
+
+
+<img width="9950" height="14105" alt="Quy trình Nộp hồ sơ Vay mua nhà" src="https://github.com/user-attachments/assets/583c70c3-3b49-45f8-8305-b8c2457588c0" />
+
+# PHẦN 4 – Sơ đồ Mermaid.
+sequenceDiagram
+    autonumber
+    participant U as Người dùng (Borrower)
+    participant FE as Chatbot/App
+    participant BE as Backend System
+    participant EXT as External APIs (CIC/NFC/CA)
+    participant OCR as OCR Engine
+    participant DB as Database
+
+    Note over U, DB: GIAI ĐOẠN 1: ĐỊNH DANH & SÀNG LỌC SỚM (FAIL-FAST)
+    
+    U->>FE: Bắt đầu hồ sơ vay
+    FE->>U: Yêu cầu chụp CCCD (hoặc quét NFC)
+    U->>FE: Upload ảnh CCCD / Chạm chip NFC
+    FE->>BE: Gửi dữ liệu định danh (ID, Họ tên)
+    
+    %% BƯỚC QUAN TRỌNG: CHECK CIC NGAY LẬP TỨC
+    BE->>EXT: Check lịch sử tín dụng (CIC/Blacklist)
+    EXT-->>BE: Trả về kết quả (Score/Status)
+    
+    alt Khách hàng Nợ xấu / Blacklist
+        BE-->>FE: Trả về thông báo từ chối
+        FE->>U: Thông báo dừng quy trình & Gợi ý liên hệ CSKH
+    else Khách hàng Đủ điều kiện sơ bộ
+        BE-->>FE: Cho phép tiếp tục
+        FE->>U: Chuyển sang bước nộp hồ sơ tài chính
+    end
+
+    Note over U, DB: GIAI ĐOẠN 2: THU THẬP TÀI LIỆU & OCR (MULTI-PAGE)
+
+    loop Với từng loại tài liệu (Lương, Sổ đỏ...)
+        FE->>U: Yêu cầu upload (Hỗ trợ nhiều trang/ảnh)
+        U->>FE: Upload File 1, File 2...
+        FE->>BE: Upload trọn bộ tài liệu
+        BE->>OCR: Request OCR (Xử lý Multi-page)
+        OCR-->>BE: Trả dữ liệu JSON gộp
+        BE->>DB: Lưu nháp (Auto-save)
+        BE-->>FE: Hiển thị dữ liệu trích xuất
+        
+        opt Người dùng sửa dữ liệu
+            U->>FE: Chỉnh sửa thông tin sai lệch
+            FE->>BE: Cập nhật dữ liệu (PATCH)
+        end
+    end
+
+    Note over U, DB: GIAI ĐOẠN 3: XÁC THỰC SINH TRẮC HỌC (GATEKEEPER)
+
+    FE->>U: Yêu cầu quay video khuôn mặt
+    activate U
+    U->>FE: Thực hiện Liveness (Nghiêng, chớp mắt...)
+    deactivate U
+    FE->>BE: Stream Video + Metadata
+    
+    par Xử lý song song
+        BE->>DB: Lưu trữ Video bằng chứng (Evidence)
+        BE->>EXT: So khớp khuôn mặt (Face Matching)
+    end
+    
+    EXT-->>BE: Kết quả (Match Score > 90%)
+    
+    alt Xác thực Thất bại
+        BE-->>FE: Yêu cầu thực hiện lại
+    else Xác thực Thành công
+        BE->>DB: Đánh dấu "Verified"
+        BE-->>FE: Chuyển bước Ký
+    end
+
+    Note over U, DB: GIAI ĐOẠN 4: REVIEW & KÝ SỐ (DIGITAL SIGNATURE)
+
+    FE->>BE: Yêu cầu tạo hợp đồng
+    BE->>BE: Generate PDF từ dữ liệu đã lưu
+    BE-->>FE: Hiển thị Preview PDF
+    
+    U->>FE: Xem & Nhấn "Ký hồ sơ"
+    FE->>BE: Request ký số
+    BE->>EXT: Gửi yêu cầu sang Smart CA / Trust Service
+    EXT-->>U: Gửi OTP/Notification xác thực (trên App CA)
+    U->>EXT: Xác nhận ký
+    EXT-->>BE: Trả về Chứng thư số & Hash đã ký
+    
+    BE->>BE: Đóng dấu ký số vào PDF
+    BE->>DB: Lưu hồ sơ hoàn tất
+    BE->>EXT: Đẩy hồ sơ sang LOS (Loan Origination System)
+    BE-->>FE: Thông báo Thành công
+    FE-->>U: Hiển thị mã hồ sơ & Kết thúc
